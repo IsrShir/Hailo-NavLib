@@ -1,0 +1,31 @@
+# data and recordings (keep on shared storage, not in git)
+data/
+*.pgm
+*.png
+!docs/**/*.png
+*.mp4
+*.zip
+*.bag
+*.db3
+
+# build outputs and binaries
+build*/
+recorder/vio_rec
+/openvins/runner/vio_replay
+lib/
+
+# results of runs
+results/
+res/
+traj.txt
+stats.csv
+timing_*.txt
+
+# python / editors
+__pycache__/
+*.pyc
+.venv/
+*.bak*
+*~
+.vscode/
+.idea/

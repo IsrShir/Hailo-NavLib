@@ -1,0 +1,9 @@
+# Kalibr target for aprilgrid_6x4_30mm_A4.pdf (made with make_a4.sh).
+# tagSize is the black square edge in metres. MEASURE IT ON THE PRINT and update this value:
+# printers scale by ~1%, and Kalibr's metric accuracy depends on it.
+# tagSpacing is a ratio (gap / tagSize) and does not change with print scaling.
+target_type: 'aprilgrid'
+tagCols: 6
+tagRows: 4
+tagSize: 0.030
+tagSpacing: 0.3

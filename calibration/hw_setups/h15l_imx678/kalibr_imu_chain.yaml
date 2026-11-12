@@ -1,0 +1,23 @@
+%YAML:1.0
+# LSM6DSR on the H15L SBC (i2c-2 0x6a). PLACEHOLDER noise: datasheet x~10
+# (gyro 5 mdps/rtHz = 8.7e-5 rad/s/rtHz, accel 60 ug/rtHz = 5.9e-4 m/s^2/rtHz).
+# Replace with an Allan-variance result. Actual ODR measured 221 Hz (nominal 208).
+imu0:
+  T_i_b:
+    - [1.0, 0.0, 0.0, 0.0]
+    - [0.0, 1.0, 0.0, 0.0]
+    - [0.0, 0.0, 1.0, 0.0]
+    - [0.0, 0.0, 0.0, 1.0]
+  accelerometer_noise_density: 6.0e-3
+  accelerometer_random_walk: 1.0e-3
+  gyroscope_noise_density: 9.0e-4
+  gyroscope_random_walk: 1.0e-4
+  rostopic: /imu0
+  time_offset: 0.0
+  update_rate: 221.0
+  model: "kalibr"
+  Tw: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+  R_IMUtoGYRO: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+  Ta: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+  R_IMUtoACC: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+  Tg: [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
