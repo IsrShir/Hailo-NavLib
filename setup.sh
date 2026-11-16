@@ -3,11 +3,11 @@
 #   ./setup.sh [board]       board = ssh name (default h15); if it is not reachable, only the build runs
 #   ./setup.sh --no-deploy   build only
 # Steps (each one is skipped if already done):
-#   1. Ceres for the board            openvins/build_ceres.sh
-#   2. OpenVINS source                git submodule openvins/open_vins (official rpng/open_vins, pinned commit)
-#   3. OpenVINS runner for the board  openvins/build_h15l.sh
+#   1. Ceres for the board            VIO/openvins/build_ceres.sh
+#   2. OpenVINS source                git submodule VIO/openvins/open_vins (official rpng/open_vins, pinned commit)
+#   3. OpenVINS runner for the board  VIO/openvins/build_h15l.sh
 #   4. recorder for the board         recorder/build.sh
-#   5. install on the board           openvins/deploy.sh + recorder/deploy.sh
+#   5. install on the board           VIO/openvins/deploy.sh + recorder/deploy.sh
 # Env: H15L_SDK (default ~/h15l_sdk_v1.13/sdk), CERES_PREFIX (default ~/h15l_sdk_v1.13/ceres_install),
 #      NAVLIB_BUILD (default ~/navlib_build: build output)
 set -e
@@ -24,14 +24,14 @@ step() { echo; echo "=== $*"; }
 mkdir -p "$BUILD"
 
 step "1/5 Ceres -> $CERES_PREFIX"
-if [ -f "$CERES_DIR/CeresConfig.cmake" ]; then echo "already built"; else "$ROOT/openvins/build_ceres.sh" "$CERES_PREFIX"; fi
+if [ -f "$CERES_DIR/CeresConfig.cmake" ]; then echo "already built"; else "$ROOT/VIO/openvins/build_ceres.sh" "$CERES_PREFIX"; fi
 
-step "2/5 OpenVINS source -> openvins/open_vins (submodule)"
-git -C "$ROOT" submodule update --init openvins/open_vins
-git -C "$ROOT/openvins/open_vins" log -1 --format="rpng/open_vins %h %ad" --date=short
+step "2/5 OpenVINS source -> VIO/openvins/open_vins (submodule)"
+git -C "$ROOT" submodule update --init VIO/openvins/open_vins
+git -C "$ROOT/VIO/openvins/open_vins" log -1 --format="rpng/open_vins %h %ad" --date=short
 
 step "3/5 OpenVINS runner -> $BUILD/build_h15l/vio_replay"
-"$ROOT/openvins/build_h15l.sh" "$BUILD/build_h15l" > "$BUILD/build_h15l.log" 2>&1 \
+"$ROOT/VIO/openvins/build_h15l.sh" "$BUILD/build_h15l" > "$BUILD/build_h15l.log" 2>&1 \
   || { tail -20 "$BUILD/build_h15l.log"; exit 1; }
 echo "built (log: $BUILD/build_h15l.log)"
 
@@ -44,6 +44,6 @@ elif ! ssh -o BatchMode=yes -o ConnectTimeout=5 "$T" true 2>/dev/null; then
   step "5/5 install on the board: skipped, '$T' not reachable (connect it and run ./setup.sh $T again)"
 else
   step "5/5 install on $T"
-  "$ROOT/openvins/deploy.sh" "$BUILD/build_h15l/vio_replay" "$T"
+  "$ROOT/VIO/openvins/deploy.sh" "$BUILD/build_h15l/vio_replay" "$T"
   "$ROOT/recorder/deploy.sh" "$T" > /dev/null && echo "recorder deployed"
 fi

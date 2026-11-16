@@ -1,7 +1,7 @@
 # ROS-free build of OpenVINS (ov_core + ov_init + ov_msckf, no ROS / no aruco) plus the EuRoC mono replay runner
 cmake_minimum_required(VERSION 3.10)
 project(ov_noros CXX)
-set(OV_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../open_vins" CACHE PATH "path to open_vins source root (default: the openvins/open_vins submodule)")
+set(OV_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../open_vins" CACHE PATH "path to open_vins source root (default: the VIO/openvins/open_vins submodule)")
 set(CMAKE_CXX_STANDARD 14)
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)

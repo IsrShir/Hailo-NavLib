@@ -2,7 +2,7 @@
 # Board (or laptop): turn a vio_rec recording into the EuRoC ASL folder the OpenVINS runner reads, in place:
 #   to_asl.sh <recording dir> [--dqbuf]   -> <recording dir>/asl/{cam0/data.csv, cam0/data/<ns>.pgm, imu0/data.csv}
 # Images are symlinks to <recording dir>/cam/ (nothing is copied). IMU rows are on gyro timestamps with the
-# accelerometer linearly interpolated onto them, in rad/s and m/s^2 - the same output as analysis/rec2asl.py
+# accelerometer linearly interpolated onto them, in rad/s and m/s^2 - the same output as evaluation/analysis/rec2asl.py
 # (which also prints a timing report). Camera timestamps: V4L2 (default) or the dequeue time (--dqbuf).
 set -e
 REC=$(cd "${1:?usage: $0 <recording dir> [--dqbuf]}" && pwd)

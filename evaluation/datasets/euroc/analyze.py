@@ -3,18 +3,18 @@
 
   analyze.py <results dir> [--gt <ground-truth dir>]
 
-Each run is a subfolder written by openvins/run.sh (timing_wall.txt, traj.txt, stats.csv); its name must start
+Each run is a subfolder written by VIO/openvins/run.sh (timing_wall.txt, traj.txt, stats.csv); its name must start
 with the sequence, e.g. V1_01_reduced_1thr or MH_05_default_4thr. Ground truth: <gt dir>/<sequence>.txt
-(default: the files that ship with OpenVINS, openvins/open_vins/ov_data/euroc_mav/). ATE = position RMSE after a
-yaw + translation alignment (as OpenVINS' ov_eval "posyaw"), computed by analysis/plot_traj_vs_gt.py; no ROS needed.
+(default: the files that ship with OpenVINS, VIO/openvins/open_vins/ov_data/euroc_mav/). ATE = position RMSE after a
+yaw + translation alignment (as OpenVINS' ov_eval "posyaw"), computed by evaluation/analysis/plot_traj_vs_gt.py; no ROS needed.
 """
 import argparse
 import os
 import statistics as st
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(ROOT, 'analysis'))
+ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))
+sys.path.insert(0, os.path.join(ROOT, 'evaluation', 'analysis'))
 from plot_traj_vs_gt import ate  # noqa: E402
 
 STAGES = ['trk', 'prop', 'msckf', 'slam', 'slamDel', 'marg']
@@ -41,7 +41,7 @@ def cpu_ms(stats):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('results')
-    ap.add_argument('--gt', default=os.path.join(ROOT, 'openvins', 'open_vins', 'ov_data', 'euroc_mav'))
+    ap.add_argument('--gt', default=os.path.join(ROOT, 'VIO', 'openvins', 'open_vins', 'ov_data', 'euroc_mav'))
     a = ap.parse_args()
     seqs = sorted(f[:-4] for f in os.listdir(a.gt) if f.endswith('.txt'))
     for tag in sorted(os.listdir(a.results)):

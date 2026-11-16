@@ -7,7 +7,7 @@
 The board does the same conversion with recorder/to_asl.sh (byte-identical output, images as symlinks);
 use this one for the timing report or for PNG output (--png, for Kalibr).
 
-Output layout (what runner/vio_replay.cpp and Kalibr's bagcreater read):
+Output layout (what VIO/openvins/runner/vio_replay.cpp and Kalibr's bagcreater read):
   <asl_out>/cam0/data.csv     #timestamp [ns],filename
   <asl_out>/cam0/data/<ns>.pgm|png
   <asl_out>/imu0/data.csv     #timestamp [ns],w_x,w_y,w_z [rad/s],a_x,a_y,a_z [m/s^2]

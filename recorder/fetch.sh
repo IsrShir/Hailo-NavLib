@@ -11,4 +11,4 @@ B=${NAVLIB_BOARD:-/home/root/navlib}
 mkdir -p "$DATA"
 ssh "$T" "tar czf - -C $B/rec $N" | tar xzf - -C "$DATA"
 [ -d "$DATA/$N/asl" ] || "$(dirname "$0")/to_asl.sh" "$DATA/$N"
-python3 "$(dirname "$0")/../analysis/rec2asl.py" --report-only "$DATA/$N"
+python3 "$(dirname "$0")/../evaluation/analysis/rec2asl.py" --report-only "$DATA/$N"

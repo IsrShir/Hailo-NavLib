@@ -2,7 +2,7 @@
 # Board-side: record one camera + IMU session for OpenVINS.
 #   ./record.sh <name> [seconds] [extra vio_rec args, e.g. -W 1920 -H 1080 -f 20 -k 3]
 # Output: $REC_DIR/<name>/ (default: rec/ next to this folder), including <name>/asl/ - the EuRoC folder that
-# openvins/run.sh reads (made by to_asl.sh at the end, images as symlinks). fetch.sh copies it to the laptop.
+# VIO/openvins/run.sh reads (made by to_asl.sh at the end, images as symlinks). fetch.sh copies it to the laptop.
 # Delayed start (e.g. to unplug Ethernet first), from the laptop:
 #   ssh -n h15 '(cd /home/root/navlib/recorder && setsid nohup sh -c "sleep 10; ./record.sh walk3 120 -W 768 -H 432 -k 1") > /dev/null 2>&1 < /dev/null &'
 # Hold the board still for the first ~3 s (OpenVINS static init) and the last ~2 s.
