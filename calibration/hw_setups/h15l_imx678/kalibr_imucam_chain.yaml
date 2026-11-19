@@ -1,7 +1,7 @@
 %YAML:1.0
 # IMX678 + Leopard kit lens (LI-IMX678-MIPI-118H) via ISP scaler at 768x432 (full 3840x2160 / 5).
 # Intrinsics: calibration/calib_fisheye_aprilgrid.py on rec calib_cam1080 (342 frames, RMS 1.31 px at 1080p;
-# image edges/corners not yet covered beyond ~50 deg) -> lens.yaml.
+# image edges/corners not yet covered beyond ~50 deg).
 # Rotation + time shift: calibration/cam_imu_targetcal.py on rec calib_imu2 (181 pairs, median residual
 # 0.65 deg; calib_imu agrees to ~6 deg). Translation not observable with that tool -> 0.
 cam0:

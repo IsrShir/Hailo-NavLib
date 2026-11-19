@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """Preliminary equidistant (Kalibr pinhole-equi / OpenCV fisheye) intrinsics from Kalibr AprilGrid frames.
 
-  calib_fisheye_aprilgrid.py <asl_dir> [<asl_dir> ...] [--scale-to 768x432] [--out lens.yaml]
+  calib_fisheye_aprilgrid.py <asl_dir> [<asl_dir> ...] [--scale-to 768x432]
+                             [--imucam calibration/hw_setups/<setup>/kalibr_imucam_chain.yaml]
+
+--imucam writes the cam0 lens model (scaled to --scale-to) into that file: an existing file keeps its
+T_imu_cam and time shift, a new one starts with identity T_imu_cam (then run cam_imu_targetcal.py).
 
 Detection: OpenCV aruco tag36h11, 2x upscaled below 1200 px width (the Kalibr grid's touching corner
 squares hurt OpenCV on small tags). Grid layout: 6x4 tags, ids row-major; corner order in tag_obj(). Not a replacement for Kalibr, a first estimate.
@@ -9,6 +13,7 @@ squares hurt OpenCV on small tags). Grid layout: 6x4 tags, ids row-major; corner
 import argparse
 import glob
 import os
+import sys
 
 import cv2
 import numpy as np
@@ -68,7 +73,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("asl", nargs="+")
     ap.add_argument("--scale-to", default="768x432")
-    ap.add_argument("--out")
+    ap.add_argument("--imucam", help="kalibr_imucam_chain.yaml to write the cam0 lens model into")
     args = ap.parse_args()
     files = sorted(sum([glob.glob(os.path.join(a, "cam0/data/*.p[gn][gm]")) for a in args.asl], []))
     dets = detect(files)
@@ -113,15 +118,37 @@ def main():
     Ks[0, 2] = (K[0, 2] + 0.5) * s - 0.5
     Ks[1, 2] = (K[1, 2] + 0.5) * (sh / h) - 0.5
     print(f"{sw}x{sh}: fx {Ks[0,0]:.4f} fy {Ks[1,1]:.4f} cx {Ks[0,2]:.4f} cy {Ks[1,2]:.4f} (same k)")
-    if args.out:
-        with open(args.out, "w") as f:
-            f.write(f"# preliminary OpenCV fisheye (equidistant) calibration from {', '.join(args.asl)}\n"
-                    f"# {len(O)} frames, RMS {rms:.3f} px at {w}x{h}; scaled to {sw}x{sh}\n"
-                    f"distortion_model: equidistant\nresolution: [{sw}, {sh}]\n"
-                    f"intrinsics: [{Ks[0,0]:.4f}, {Ks[1,1]:.4f}, {Ks[0,2]:.4f}, {Ks[1,2]:.4f}]\n"
-                    f"distortion_coeffs: [{', '.join(f'{v:.8f}' for v in D.ravel())}]\n"
-                    f"intrinsics_{w}x{h}: [{K[0,0]:.4f}, {K[1,1]:.4f}, {K[0,2]:.4f}, {K[1,2]:.4f}]\n")
-        print("->", args.out)
+    if args.imucam:
+        write_imucam(args.imucam, {
+            "camera_model": "pinhole",
+            "distortion_model": "equidistant",
+            "intrinsics": f"[{Ks[0,0]:.4f}, {Ks[1,1]:.4f}, {Ks[0,2]:.4f}, {Ks[1,2]:.4f}]",
+            "distortion_coeffs": f"[{', '.join(f'{v:.8f}' for v in D.ravel())}]",
+            "resolution": f"[{sw}, {sh}]"})
+        print(f"-> {args.imucam} (cam0 lens model; source: {', '.join(args.asl)}, {len(O)} frames, RMS {rms:.3f} px "
+              f"at {w}x{h} - note it in the file's header comment)")
+
+
+def write_imucam(path, vals):
+    """Set the cam0 lens keys of a kalibr_imucam_chain.yaml, keeping everything else (T_imu_cam, time shift)."""
+    if not os.path.exists(path):
+        with open(path, "w") as f:
+            f.write("%YAML:1.0\ncam0:\n  T_imu_cam: # R_CtoI | p_CinI (identity until cam_imu_targetcal.py)\n"
+                    "    - [1.0, 0.0, 0.0, 0.0]\n    - [0.0, 1.0, 0.0, 0.0]\n    - [0.0, 0.0, 1.0, 0.0]\n"
+                    "    - [0.0, 0.0, 0.0, 1.0]\n  cam_overlaps: []\n"
+                    + "".join(f"  {k}: {v}\n" for k, v in vals.items())
+                    + "  timeshift_cam_imu: 0.0\n  rostopic: /cam0/image_raw\n")
+        return
+    lines, seen = open(path).read().splitlines(keepends=True), set()
+    for n, line in enumerate(lines):
+        k = line.split(":", 1)[0].strip()
+        if line.startswith("  ") and not line.startswith("   ") and k in vals and k not in seen:  # first = cam0
+            lines[n] = f"  {k}: {vals[k]}\n"
+            seen.add(k)
+    missing = [k for k in vals if k not in seen]
+    if missing:
+        sys.exit(f"{path}: no cam0 key(s) {missing}")
+    open(path, "w").writelines(lines)
 
 
 if __name__ == "__main__":
