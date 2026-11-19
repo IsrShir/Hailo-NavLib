@@ -1,7 +1,0 @@
-# preliminary OpenCV fisheye (equidistant) calibration (calibration/calib_fisheye_aprilgrid.py) from recording calib_cam1080
-# 342 frames, RMS 1.311 px at 1920x1080; scaled to 768x432
-distortion_model: equidistant
-resolution: [768, 432]
-intrinsics: [379.8635, 380.5555, 385.6342, 221.1495]
-distortion_coeffs: [-0.03890467, 0.01242023, -0.04504659, 0.01872346]
-intrinsics_1920x1080: [949.6587, 951.3887, 964.8355, 553.6238]

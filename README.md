@@ -134,11 +134,14 @@ from the IMU, which also give the stop times for `--same-spot`.
    something rigid.
 2. **Lens**: record at 1920x1080 keeping every 6th frame (`-W 1920 -H 1080 -k 1 -n 6`), move the target slowly
    through the whole image including edges and corners, then
-   `calibration/calib_fisheye_aprilgrid.py <asl> --out calibration/hw_setups/<setup>/lens.yaml`. Check coverage with
+   `calibration/calib_fisheye_aprilgrid.py <asl> --imucam calibration/hw_setups/<setup>/kalibr_imucam_chain.yaml`
+   (writes the cam0 lens model; a new file starts with identity extrinsics). Check coverage with
    `calibration/check_aprilgrid.py`.
 3. **Camera-IMU rotation + time offset**: target fixed, move the camera energetically in all axes (1280x720, `-n 2`),
-   then `calibration/cam_imu_targetcal.py <asl> --lens calibration/hw_setups/<setup>/lens.yaml`.
-4. Copy the results into `calibration/hw_setups/<setup>/kalibr_imucam_chain.yaml` (manual for now, see To do).
+   then `calibration/cam_imu_targetcal.py <asl> --imucam calibration/hw_setups/<setup>/kalibr_imucam_chain.yaml`
+   (reads the lens model from that file).
+4. Copy the printed `T_imu_cam` and `timeshift_cam_imu` into the same file (manual for now, see To do). The translation
+   stays 0: the tool does not estimate it, OpenVINS refines it online.
 5. **IMU noise** (Allan variance): `vio_rec --no-cam` for 2-3 h with the board still (not touched, no fan blowing on
    it), then `calibration/allan_variance.py <recording>`: prints the Kalibr noise values and plots the Allan deviation.
    Copy them into `calibration/hw_setups/<setup>/kalibr_imu_chain.yaml`.
@@ -193,7 +196,8 @@ the lens fit is off by 6-14 px; `calib_fisheye_aprilgrid.py` handles all four.
 - Calibration: lens recalibration with edge coverage, camera-IMU rotation with the new lens, lever arm; then
   tighten the gates
   (`up_*_chi2_multipler: 5` currently rejects almost nothing).
-- Calibration tools should write `calibration/hw_setups/<setup>/kalibr_imucam_chain.yaml` directly.
+- `cam_imu_targetcal.py` should write `T_imu_cam` and `timeshift_cam_imu` into `kalibr_imucam_chain.yaml` itself
+  (the lens calibration already does).
 - Real-time: 4 threads reach ~22-23 fps at 24 fps input; the filter updates are the next target.
 - `requirements.txt` for the Python tools.
 - Statistics: number of successfully triangulated MSCKF tracks is not in `stats.csv` (the official OpenVINS does not
