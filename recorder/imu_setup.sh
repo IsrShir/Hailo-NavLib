@@ -28,12 +28,13 @@ w() {  # write if the attribute exists, report what stuck
   fi
 }
 
+rd() { tr -d '\0' < "$1" 2>/dev/null; }   # current_timestamp_clock ends with a NUL byte
 show() {
   for d in "$GYRO" "$ACCEL"; do
     echo "== $(cat "$d/name") ($d)"
     echo "  sampling_frequency:   $(cat "$d/sampling_frequency" 2>/dev/null)"
     for s in "$d"/in_*_scale; do echo "  $(basename "$s"): $(cat "$s")"; done
-    echo "  timestamp_clock:      $(cat "$d/current_timestamp_clock" 2>/dev/null)"
+    echo "  timestamp_clock:      $(rd "$d/current_timestamp_clock")"
     echo "  buffer enable/length/watermark: $(cat "$d/buffer/enable" 2>/dev/null)/$(cat "$d/buffer/length" 2>/dev/null)/$(cat "$d/buffer/watermark" 2>/dev/null)"
     printf "  scan elements on:     "
     for e in "$d"/scan_elements/*_en; do [ "$(cat "$e")" = 1 ] && printf "%s " "$(basename "$e" _en)"; done

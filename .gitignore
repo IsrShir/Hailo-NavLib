@@ -11,7 +11,7 @@ data/
 # build outputs and binaries
 build*/
 recorder/vio_rec
-/openvins/runner/vio_replay
+/VIO/openvins/runner/vio_replay
 lib/
 
 # results of runs

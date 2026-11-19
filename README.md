@@ -10,12 +10,12 @@ run OpenVINS (mono camera + IMU) on the board, and evaluate the trajectory.
 | 0 | prerequisites | Hailo-15L SDK installed; board reachable as `ssh h15` ([below](#prerequisites-and-outputs)) | once |
 | 1 | build everything and install it on the board | `./setup.sh` | once per board / after code changes |
 | 2 | record on the board | `ssh h15 /home/root/navlib/recorder/record.sh walk3 120 -W 768 -H 432 -k 1` | per recording |
-| 3 | run OpenVINS on the board | `ssh h15 /home/root/navlib/openvins/run.sh drone /home/root/navlib/rec/walk3/asl /home/root/navlib/res/walk3` | per run |
-| 4 | analyse on the laptop | `scp -r h15:/home/root/navlib/res/walk3 .` then `analysis/eval_loop.py walk3/traj.txt --out walk3.png` (loop error + plot) | per run |
+| 3 | run OpenVINS on the board | `ssh h15 /home/root/navlib/VIO/openvins/run.sh drone /home/root/navlib/rec/walk3/asl /home/root/navlib/res/walk3` | per run |
+| 4 | analyse on the laptop | `scp -r h15:/home/root/navlib/res/walk3 .` then `evaluation/analysis/eval_loop.py walk3/traj.txt --out walk3.png` (loop error + plot) | per run |
 | (5) | keep a copy of the recording | `recorder/fetch.sh walk3` (laptop copy + timing report) | optional |
 
-`setup.sh` runs `openvins/build_ceres.sh`, fetches the OpenVINS submodule, runs `build_h15l.sh` and `recorder/build.sh`,
-then installs on the board (`openvins/deploy.sh` + `recorder/deploy.sh`) if it is reachable; Ceres is built only once.
+`setup.sh` runs `VIO/openvins/build_ceres.sh`, fetches the OpenVINS submodule, runs `build_h15l.sh` and `recorder/build.sh`,
+then installs on the board (`VIO/openvins/deploy.sh` + `recorder/deploy.sh`) if it is reachable; Ceres is built only once.
 `./setup.sh <name>` for another board SSH name, `./setup.sh --no-deploy` to only build.
 Calibration (`calibration/`) is only needed for new hardware or a recalibration; it updates `calibration/hw_setups/`.
 
@@ -26,35 +26,35 @@ Every run takes two inputs, **settings** and a **dataset**, and writes its resul
 ```
   SETTINGS: how to run                     DATASET: what to run on
 
-  openvins/config/<settings>.yaml          rec/<name>/asl     recorded on the board by recorder/
+  VIO/openvins/config/<settings>.yaml      rec/<name>/asl     recorded on the board by recorder/
     + the calibration it names:              or
-  calibration/hw_setups/<setup>/           data/<sequence>    EuRoC, from euroc/get_euroc.py
+  calibration/hw_setups/<setup>/           data/<sequence>    EuRoC, from evaluation/datasets/euroc/get_euroc.py
        │                                         │
        └────────────────────┬────────────────────┘
                             ▼
-            openvins/run.sh <settings> <dataset> <out>     (on the board)
+            VIO/openvins/run.sh <settings> <dataset> <out>     (on the board)
                             │
                             ▼
             <out>/traj.txt, stats.csv, timing_wall.txt
                             │
                             ▼
-            analysis/  plots and errors (laptop)
+            evaluation/analysis/  plots and errors (laptop)
 ```
 
 | folder | what | runs on |
 |---|---|---|
-| `openvins/config/` | **algorithm settings** (threads, features, clones, gates); each file names the hardware setup it uses | - |
-| `openvins/` | `open_vins/` = official OpenVINS (git submodule, unmodified); `runner/vio_replay` = replays a recorded dataset (EuRoC ASL folder) through OpenVINS; scripts to build, deploy and run | laptop / board |
+| `VIO/openvins/config/` | **algorithm settings** (threads, features, clones, gates); each file names the hardware setup it uses | - |
+| `VIO/openvins/` | `open_vins/` = official OpenVINS (git submodule, unmodified); `runner/vio_replay` = replays a recorded dataset (EuRoC ASL folder) through OpenVINS; scripts to build, deploy and run | laptop / board |
 | `recorder/` | `vio_rec` (synchronized camera + IMU recorder, C++) and the scripts around it | board / laptop |
 | `calibration/` | `hw_setups/` = **one folder per hardware setup** (camera + IMU) with its calibration results (Kalibr format, not tied to OpenVINS); calibration tools: lens (`calib_fisheye_aprilgrid.py`, `check_aprilgrid.py`), camera-IMU rotation + time offset (`cam_imu_targetcal.py`), IMU noise (`allan_variance.py`); the AprilGrid target (`aprilgrid/`) | laptop |
-| `analysis/` | tools for any dataset (our recordings or EuRoC): recording timing report and conversion (`rec2asl.py`), walk evaluation without ground truth (`eval_loop.py`), trajectory plots (`plot_traj.py`, `plot_traj_vs_gt.py`), feature statistics (`plot_frame_stats.py`), time per stage (`timing_report.py`), IMU-only dead reckoning | laptop |
-| `euroc/` | everything specific to the public EuRoC dataset: download (`get_euroc.py`), ROS bag conversion (`bag2asl.py`, needs ROS 2; only for EuRoC bags), benchmark scripts (`board_bench*.sh` on the board, `analyze.py` on the laptop: time per stage, fps and ATE against the ground truth shipped with OpenVINS) | laptop / board |
+| `evaluation/analysis/` | tools for any dataset (our recordings or EuRoC): recording timing report and conversion (`rec2asl.py`), walk evaluation without ground truth (`eval_loop.py`), trajectory plots (`plot_traj.py`, `plot_traj_vs_gt.py`), feature statistics (`plot_frame_stats.py`), time per stage (`timing_report.py`), IMU-only dead reckoning | laptop |
+| `evaluation/datasets/euroc/` | everything specific to the public EuRoC dataset: download (`get_euroc.py`), ROS bag conversion (`bag2asl.py`, needs ROS 2; only for EuRoC bags), benchmark scripts (`board_bench*.sh` on the board, `analyze.py` on the laptop: time per stage, fps and ATE against the ground truth shipped with OpenVINS) | laptop / board |
 
 Three things are kept apart on purpose:
 
 - **hardware setup** (`calibration/hw_setups/`): the camera + IMU and their calibration. `h15l_imx678` = IMX678 + kit lens + LSM6DSR on the
   H15L SBC; `euroc` = the EuRoC dataset's camera + IMU. Recalibrating changes only these files.
-- **settings** (`openvins/config/`): how OpenVINS runs. `drone.yaml` uses `calibration/hw_setups/h15l_imx678`; `euroc_reduced.yaml`
+- **settings** (`VIO/openvins/config/`): how OpenVINS runs. `drone.yaml` uses `calibration/hw_setups/h15l_imx678`; `euroc_reduced.yaml`
   and `euroc_default.yaml` share `calibration/hw_setups/euroc`. Variants such as 1 vs 4 threads are overrides at run time
   (`run.sh drone <data> <out> num_opencv_threads=1`), not extra files.
 - **datasets**: recordings (walk1, walk2, ...) and EuRoC sequences. Not in git (hundreds of MB each).
@@ -76,7 +76,7 @@ Not in the repo:
   works too: `./setup.sh <name>`, and use `<name>` instead of `h15` in the commands here;
 - Python 3 with numpy, opencv-python (>= 4.7, includes aruco) and matplotlib.
 
-On the board everything lives in `/home/root/navlib`: `bin/ lib/ openvins/ calibration/hw_setups/ recorder/ euroc/` (installed by
+On the board everything lives in `/home/root/navlib`: `bin/ lib/ VIO/openvins/ calibration/hw_setups/ recorder/ evaluation/datasets/euroc/` (the same paths as in the repo) (installed by
 `setup.sh`), `rec/` (recordings), `data/` (other datasets, e.g. EuRoC), `res/` (run results).
 
 `run.sh` writes the exact settings used (`estimator_config.yaml`), `traj.txt` (IMU pose per frame), `stats.csv`
@@ -84,10 +84,10 @@ On the board everything lives in `/home/root/navlib`: `bin/ lib/ openvins/ calib
 state / added / removed), `timing_wall.txt` (time per OpenVINS stage) and `log.txt`.
 
 > Tested (2026-11-12, board): `setup.sh` install of the current layout; `run.sh drone` on walk2 (relative paths) and
-> `run.sh euroc_reduced` on V1_01 (copied with `euroc/get_euroc.py --board`) give trajectories byte-identical to the
-> earlier runs, V1_01 ATE 0.057 m with `analysis/plot_traj_vs_gt.py` (no ROS).
+> `run.sh euroc_reduced` on V1_01 (copied with `get_euroc.py --board`) give trajectories byte-identical to the
+> earlier runs, V1_01 ATE 0.057 m with `plot_traj_vs_gt.py` (no ROS).
 > Tested (2026-11-10): a fresh `git clone --recursive` + `./setup.sh` on the laptop, Ceres included;
-> `setup.sh` installing on the board; `to_asl.sh` (byte-identical to `analysis/rec2asl.py`); `run.sh drone` on walk2
+> `setup.sh` installing on the board; `to_asl.sh` (byte-identical to `rec2asl.py`); `run.sh drone` on walk2
 > with the official OpenVINS gives a trajectory byte-identical to the earlier runs (Hailo fork + patches), and the
 > same per-frame statistics on all 2638 frames; `vio_rec` (C++) matches the former C version (0 drops, same
 > frame/IMU timing, same CPU).
@@ -100,7 +100,7 @@ The recording lands in `/home/root/navlib/rec/<name>/` (raw camera + IMU) and `r
 `fetch.sh <name>` copies a recording to `~/navlib_data/<name>/` and prints its timing report (dropped frames,
 intervals, IMU rate); not needed for running OpenVINS.
 
-EuRoC sequences: `euroc/get_euroc.py V1_01_easy --board h15` puts the sequence (ASL format, with ground truth) in
+EuRoC sequences: `evaluation/datasets/euroc/get_euroc.py V1_01_easy --board h15` puts the sequence (ASL format, with ground truth) in
 `~/navlib_data/euroc/` and copies it to `/home/root/navlib/data/V1_01_easy` on the board; then
 `run.sh euroc_reduced /home/root/navlib/data/V1_01_easy <out>`. The ETH server may refuse automated downloads;
 the script then prints the link: download the environment zip (e.g. `vicon_room1.zip`, 6 GB) in a browser and run
@@ -124,7 +124,7 @@ Our recordings have no ground-truth path, so a walk is judged by points with kno
   two positions there, and the heading/length of the out and back legs (heading difference = yaw error, length
   difference = scale error).
 
-`analysis/eval_loop.py <res>/traj.txt --asl <recording>/asl --same-spot 32-33.5,67.5-70.5 --out walk.png` prints
+`evaluation/analysis/eval_loop.py <res>/traj.txt --asl <recording>/asl --same-spot 32-33.5,67.5-70.5 --out walk.png` prints
 both and plots the walk; `--asl` (only `cam0/data.csv` and `imu0/data.csv` are read) adds the still periods found
 from the IMU, which also give the stop times for `--same-spot`.
 
@@ -171,7 +171,7 @@ the lens fit is off by 6-14 px; `calib_fisheye_aprilgrid.py` handles all four.
 - VIO is still fragile: small input changes (frame subset, 4% on one gyro axis) swing the heading by +-10 deg and
   the loop error between ~1% and ~8%. A gyro turn test shows the gyro scale is fine (0.1%); focal x1.04 and
   `max_clones: 10` made things worse. Judge changes by the spread over several runs, not by one number.
-- A MEMS IMU alone drifts metres within seconds (`analysis/imu_only_deadreckon.py`); VIO bridges ~1 s without
+- A MEMS IMU alone drifts metres within seconds (`evaluation/analysis/imu_only_deadreckon.py`); VIO bridges ~1 s without
   features (e.g. facing a blank door), at a cost.
 
 ## Board notes
@@ -201,10 +201,10 @@ the lens fit is off by 6-14 px; `calib_fisheye_aprilgrid.py` handles all four.
 
 ## Third-party code
 
-- OpenVINS (GPL-3.0, https://github.com/rpng/open_vins) is a git submodule at `openvins/open_vins`, pinned to the
+- OpenVINS (GPL-3.0, https://github.com/rpng/open_vins) is a git submodule at `VIO/openvins/open_vins`, pinned to the
   official master commit 6948812 (2025-11-30, newer than release v2.7) and used unmodified. Clone NavLib with
   `git clone --recursive`, or run `git submodule update --init` (`setup.sh` does it). The runner reads its per-frame
   statistics through a `VioManager` subclass, so no patches are needed. The runner links OpenVINS, so it is
-  GPL-3.0 derived work; everything that depends on OpenVINS lives in `openvins/`.
+  GPL-3.0 derived work; everything that depends on OpenVINS lives in `VIO/openvins/`.
 - Kalibr (BSD-3) is only downloaded by `calibration/aprilgrid/make_a4.sh` to regenerate the target PDF.
 - No license has been chosen for NavLib yet (internal repo).

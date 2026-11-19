@@ -1,19 +1,19 @@
 #!/bin/sh
 # Board: run OpenVINS (vio_replay) on one EuRoC-format dataset with one settings file.
 #   run.sh <settings> <dataset dir> <out dir> [key=value ...]
-#     settings  name in openvins/config/ (e.g. drone, euroc_reduced) or a path to a .yaml
+#     settings  name in VIO/openvins/config/ (e.g. drone, euroc_reduced) or a path to a .yaml
 #     key=value overrides a top-level setting, e.g. num_opencv_threads=1 max_clones=10
 # Writes <out>/estimator_config.yaml (the exact settings used, sensor paths rewritten relative to <out> so the
 # calibration/hw_setups/ files are used in place, not copied), traj.txt, stats.csv, timing_*.txt, log.txt.
-# Env: NAVLIB  board root (default: the folder above openvins/)
+# Env: NAVLIB  board root (default: two folders above this script, as VIO/openvins/ is in the repo)
 #      BIN     runner binary (default $NAVLIB/bin/vio_replay)
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
-NAVLIB=${NAVLIB:-$(dirname "$HERE")}
+NAVLIB=${NAVLIB:-$(cd "$HERE/../.." && pwd)}
 BIN=${BIN:-$NAVLIB/bin/vio_replay}
 [ $# -ge 3 ] || { sed -n '2,6p' "$0"; exit 2; }
 CFG=$1; DATA=$2; OUT=$3; shift 3
-[ -f "$CFG" ] || CFG=$NAVLIB/openvins/config/$CFG.yaml
+[ -f "$CFG" ] || CFG=$HERE/config/$CFG.yaml
 [ -f "$CFG" ] || { echo "settings not found: $1" >&2; exit 1; }
 [ -f "$DATA/cam0/data.csv" ] && [ -f "$DATA/imu0/data.csv" ] || { echo "not a EuRoC ASL dataset: $DATA" >&2; exit 1; }
 DATA=$(cd "$DATA" && pwd)

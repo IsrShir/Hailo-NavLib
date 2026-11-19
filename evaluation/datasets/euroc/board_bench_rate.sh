@@ -1,8 +1,8 @@
 #!/bin/sh
 # Board: lower camera rates by dropping frames (15 Hz: every 4th, 10 Hz: every 2nd) on V1_01 and MH_05.
 # Creates <seq>_<hz>hz datasets next to the originals (frame list only; images and IMU are linked).
-B=$(cd "$(dirname "$0")/.." && pwd); NAVLIB=${NAVLIB:-$B}; DATA=${DATA:-$NAVLIB/data}; RES=${RES:-$NAVLIB/res/bench}
-RUN=$NAVLIB/openvins/run.sh
+B=$(cd "$(dirname "$0")/../../.." && pwd); NAVLIB=${NAVLIB:-$B}; DATA=${DATA:-$NAVLIB/data}; RES=${RES:-$NAVLIB/res/bench}
+RUN=$NAVLIB/VIO/openvins/run.sh
 for seq in V1_01_easy MH_05_difficult; do
   D=$DATA/$seq
   for hz in 15 10; do

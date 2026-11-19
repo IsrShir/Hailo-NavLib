@@ -1,5 +1,5 @@
 // vio_rec: record camera frames (V4L2) + LSM6DSR gyro/accel (IIO buffers) on the H15L for offline VIO.
-// Raw output; to_asl.sh (board) or analysis/rec2asl.py (laptop) converts it to EuRoC ASL.
+// Raw output; to_asl.sh (board) or evaluation/analysis/rec2asl.py (laptop) converts it to EuRoC ASL.
 //
 // Expects the IIO buffers to be configured by imu_setup.sh first (scan elements, ODR,
 // timestamp clock); this program only opens /dev/iio:deviceN and reads.
